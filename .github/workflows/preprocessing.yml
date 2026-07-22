@@ -1,0 +1,41 @@
+name: Preprocessing Automation
+
+# Trigger: saat push ke branch main, atau dijalankan manual dari tab Actions
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  run-preprocessing:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install pandas numpy scikit-learn joblib
+
+    - name: Run preprocessing script
+      run: |
+        python preprocessing/automate_muhammad_aiyub.py
+
+    - name: Commit and push processed data
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "github-actions[bot]"
+        git add namadataset_preprocessing/
+        # Cek apakah ada perubahan, jika ada baru commit dan push
+        git diff --staged --quiet || git commit -m "ci: auto-update processed dataset [skip ci]"
+        git push
